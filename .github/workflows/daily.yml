@@ -1,12 +1,21 @@
 name: EUAMDB10 Daily Update
 
-# Déclenchement : cron quotidien + déclenchement manuel pour test.
-# Heure choisie par défaut à 07:30 UTC, arbitrairement après le
-# créneau de mise à jour observé côté Natixis (~07:12 UTC le
-# 16/09/2026). À ajuster si les mises à jour du site se décalent.
+# Déclenchement : trois créneaux cron quotidiens + déclenchement manuel
+# pour test. Le script est idempotent (dédoublonnage par date, voir
+# tâche 2.3) donc chaque passage supplémentaire le même jour ne fait
+# rien si un précédent a déjà réussi, et rattrape si les précédents
+# ont été retardés ou sautés (GitHub ne garantit pas l'heure exacte
+# d'un cron, voir doc officielle sur les périodes de forte charge).
+# Minutes non rondes pour éviter les pics de charge en début d'heure.
+# Les trois créneaux sont après 11h UTC, conformément à l'heure de
+# mise à jour signalée par Natixis sur leur site, et étalés dans la
+# journée pour maximiser les chances de rattrapage en cas de créneau
+# raté.
 on:
   schedule:
-    - cron: '30 7 * * *'
+    - cron: '42 11 * * *'
+    - cron: '47 15 * * *'
+    - cron: '53 19 * * *'
   workflow_dispatch: {}
 
 # Nécessaire pour que le GITHUB_TOKEN par défaut puisse pousser un

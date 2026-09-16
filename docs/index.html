@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indice EUAMDB10 — SPOT et historique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F1EA; --card:#FFFFFF; --ink:#14181D; --ink2:#3C4552;
+    --rule:#DCD6C9; --accent:#0F4C81; --mark:#B0451E; --max:#8C2318; --min:#1F5F3F;
+    --sans:'Instrument Sans',-apple-system,'Segoe UI',system-ui,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg)}
+  body{font-family:var(--sans);color:var(--ink);-webkit-text-size-adjust:100%;padding:20px 16px 56px}
+  .wrap{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+  .head-title{font-size:19px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .head-sub{font-size:18px;color:var(--ink2)}
+  .card{background:var(--card);border:2px solid var(--ink);border-radius:16px}
+  .spot{padding:22px 20px 18px;display:flex;flex-direction:column;gap:6px}
+  .spot-label{font-size:20px;font-weight:700;letter-spacing:.14em}
+  .spot-value{font-family:var(--mono);font-weight:600;font-size:clamp(76px,22vw,124px);line-height:.95;letter-spacing:-.02em;color:var(--accent)}
+  .spot-date{font-size:21px;font-weight:600;margin-top:4px}
+  .hr{height:2px;background:var(--rule);margin:12px 0 10px}
+  .upd{font-size:18px;line-height:1.45;color:var(--ink2)}
+  .upd b{color:var(--ink)}
+  .chart-card{padding:20px 16px 18px;display:flex;flex-direction:column;gap:16px}
+  .chart-title{font-size:22px;font-weight:700;padding:0 4px}
+  .periods{display:flex;flex-wrap:wrap;gap:10px}
+  .periods button{flex:1 1 auto;min-width:96px;min-height:56px;padding:0 18px;font-family:inherit;font-size:19px;font-weight:600;
+    color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:10px;cursor:pointer}
+  .periods button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .readout{background:var(--bg);border:2px solid var(--rule);border-radius:12px;padding:14px 16px;
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .readout .d{font-size:19px;font-weight:600;color:var(--ink2)}
+  .readout .v{font-family:var(--mono);font-size:30px;font-weight:600}
+  .plot-row{display:flex;align-items:stretch;gap:8px}
+  .ygutter{position:relative;width:60px;flex:0 0 60px}
+  .ygutter div{position:absolute;right:0;transform:translateY(-50%);font-family:var(--mono);font-size:18px;font-weight:500;color:var(--ink2);white-space:nowrap}
+  .plot{position:relative;flex:1 1 auto;min-width:0}
+  svg{display:block;width:100%;height:290px;touch-action:pan-y;outline-offset:4px}
+  .thr{position:absolute;right:2px;transform:translateY(-50%);background:var(--card);border-radius:6px;padding:2px 7px;
+    font-family:var(--mono);font-size:17px;font-weight:600;white-space:nowrap;pointer-events:none;border:2px solid}
+  .thr.max{color:var(--max);border-color:var(--max)}
+  .thr.min{color:var(--min);border-color:var(--min)}
+  .dot{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:var(--mark);border:3px solid #fff;pointer-events:none}
+  .xrow{display:flex;gap:8px}
+  .xrow .sp{width:60px;flex:0 0 60px}
+  .xaxis{position:relative;flex:1 1 auto;height:26px}
+  .xaxis div{position:absolute;font-size:18px;font-weight:500;color:var(--ink2);white-space:nowrap}
+  .help{font-size:18px;line-height:1.5;color:var(--ink2);padding:0 4px}
+  .legend{font-size:18px;line-height:1.5;color:var(--ink);padding:0 4px}
+  .legend .lmin{font-weight:700;color:var(--min)}
+  .legend .lmax{font-weight:700;color:var(--max)}
+  .note{border-left:6px solid var(--mark);background:#FBF3EE;padding:12px 14px;border-radius:0 10px 10px 0;font-size:18px;line-height:1.5}
+  .err{border:3px solid var(--max);border-radius:14px;background:var(--card);padding:20px;display:flex;flex-direction:column;gap:10px}
+  .err h2{margin:0;font-size:22px;color:var(--max)}
+  .err p{margin:0;font-size:18px;line-height:1.5}
+  .err button{align-self:flex-start;min-height:52px;padding:0 24px;font-family:inherit;font-size:19px;font-weight:600;color:#fff;background:var(--ink);border:none;border-radius:10px;cursor:pointer}
+  [hidden]{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div class="head-title">Indice EUAMDB10</div>
+    <div class="head-sub">Consultation de la dernière valeur et de l'historique</div>
+  </div>
+
+  <div class="err" id="errBox" hidden>
+    <h2>Dernière valeur connue non disponible</h2>
+    <p>Les données n'ont pas pu être chargées. Elles sont mises à jour une fois par jour ; réessayez plus tard.</p>
+    <button type="button" onclick="location.reload()">Réessayer</button>
+  </div>
+
+  <div id="app" hidden style="display:flex;flex-direction:column;gap:20px">
+    <div class="card spot">
+      <div class="spot-label">SPOT</div>
+      <div class="spot-value" id="spotValue">—</div>
+      <div class="spot-date">Valeur au <span id="spotDate">—</span></div>
+      <div class="hr"></div>
+      <div class="upd"><b>Dernière mise à jour</b><br><span id="spotUpd">—</span></div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-title">Historique</div>
+      <div class="periods" id="periods" role="group" aria-label="Période affichée"></div>
+
+      <div class="readout">
+        <div class="d" id="roDate">—</div>
+        <div class="v" id="roValue">—</div>
+      </div>
+
+      <div class="plot-row">
+        <div class="ygutter" id="ygutter"></div>
+        <div class="plot" id="plot">
+          <svg id="svg" viewBox="0 0 700 300" preserveAspectRatio="none" tabindex="0" role="img" aria-label="Graphique historique de l'indice"></svg>
+          <div class="thr max" id="thrMax" hidden>MAX</div>
+          <div class="thr min" id="thrMin" hidden>MIN</div>
+          <div class="dot" id="dot" hidden></div>
+        </div>
+      </div>
+      <div class="xrow"><div class="sp"></div><div class="xaxis" id="xaxis"></div></div>
+
+      <div class="help">Touchez la courbe pour lire une date et sa valeur.</div>
+      <div class="legend">Les deux lignes en pointillés <span class="lmin">MIN</span> et <span class="lmax">MAX</span> sont des seuils fixes : ils restent les mêmes pour toutes les périodes.</div>
+      <div class="note" id="oldNote" hidden>Avant août 2026, la courbe montre la tendance générale de l'indice. Les valeurs jour par jour ne sont fiables qu'à partir d'août 2026.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Source de données ----------------------------------------
+   Unique source : le JSON produit par build_frontend_data.py.
+   GitHub Pages publiant /docs comme racine, le fichier doit être écrit
+   dans docs/data/euamdb10.json. Ajuster DATA_URL si l'emplacement change.
+   Toute absence ou structure invalide affiche l'état "valeur non disponible".
+--------------------------------------------------------------------- */
+var DATA_URL = 'data/euamdb10.json';
+
+/* ---------- utilitaires ---------- */
+function nf(v){ return typeof v === 'number' && isFinite(v) ? v.toFixed(2).replace('.', ',') : '—'; }
+function frDate(iso){ var p = String(iso).split('-'); return p.length === 3 ? p[2]+'.'+p[1]+'.'+p[0] : String(iso); }
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
+
+function toISO(s){
+  s = String(s).trim().replace(/^["']|["']$/g, '');
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);              if (m) return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+  m = s.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);        if (m) return m[3]+'-'+pad(+m[2])+'-'+pad(+m[1]);
+  m = s.match(/^(\d{4})(\d{2})(\d{2})$/);                       if (m) return m[1]+'-'+m[2]+'-'+m[3];
+  return null;
+}
+function toNum(s){
+  if (typeof s === 'number') return s;
+  s = String(s).trim().replace(/^["']|["']$/g, '').replace(/\s|\u00a0/g, '').replace('%', '');
+  if (s.indexOf(',') > -1 && s.indexOf('.') === -1) s = s.replace(',', '.');
+  else if (s.indexOf(',') > -1 && s.indexOf('.') > -1) s = s.replace(/,/g, '');
+  var v = parseFloat(s);
+  return isFinite(v) ? v : null;
+}
+/* ---------- lecture de la source ---------- */
+function fromJSON(txt){
+  var d = JSON.parse(txt);
+  if (!d || !d.spot || !Array.isArray(d.history) || !d.history.length) throw new Error('structure');
+  var hist = d.history.map(function(p){ return { date: toISO(p.date) || p.date, value: toNum(p.value) }; })
+                      .filter(function(p){ return p.date && p.value !== null; });
+  return {
+    spot: { value: toNum(d.spot.value), date: d.spot.date || frDate(hist[hist.length-1].date), last_update: d.spot.last_update || '' },
+    params: { min: d.params ? toNum(d.params.min) : null, max: d.params ? toNum(d.params.max) : null },
+    history: hist
+  };
+}
+/* ---------- état + rendu ---------- */
+var DATA = null, RANGE = '1m', SEL = null;
+var PERIODS = [['7j','7 jours',7], ['1m','1 mois',30], ['3m','3 mois',90], ['1a','1 an',365], ['all','Tout',0]];
+var L = 4, R = 696, T = 14, B = 286;
+
+function slice(){
+  var h = DATA.history, days = 0;
+  PERIODS.forEach(function(p){ if (p[0] === RANGE) days = p[2]; });
+  return days ? h.slice(Math.max(0, h.length - days)) : h;
+}
+function buildButtons(){
+  var box = document.getElementById('periods');
+  box.innerHTML = '';
+  PERIODS.forEach(function(p){
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = p[1];
+    b.setAttribute('aria-pressed', RANGE === p[0] ? 'true' : 'false');
+    b.onclick = function(){ RANGE = p[0]; SEL = null; buildButtons(); draw(); };
+    box.appendChild(b);
+  });
+}
+function draw(){
+  var s = slice(), n = s.length;
+  var pmin = DATA.params.min, pmax = DATA.params.max;
+  var vals = s.map(function(p){ return p.value; });
+  if (pmin !== null) vals.push(pmin);
+  if (pmax !== null) vals.push(pmax);
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (max - min < 0.05){ min -= 0.1; max += 0.1; }
+  var padv = (max - min) * 0.12; min -= padv; max += padv;
+  var X = function(i){ return n === 1 ? (L + R) / 2 : L + (R - L) * i / (n - 1); };
+  var Y = function(v){ return B - (B - T) * (v - min) / (max - min); };
+
+  var parts = [];
+  var yg = document.getElementById('ygutter'); yg.innerHTML = '';
+  for (var k = 0; k <= 4; k++){
+    var v = min + (max - min) * k / 4, y = Y(v);
+    parts.push('<line x1="0" x2="700" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#DCD6C9" stroke-width="2" vector-effect="non-scaling-stroke"/>');
+    var lab = document.createElement('div');
+    lab.style.top = (y / 300 * 100).toFixed(2) + '%';
+    lab.textContent = nf(v);
+    yg.appendChild(lab);
+  }
+  if (min < 0 && max > 0)
+    parts.push('<line x1="0" x2="700" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="#14181D" stroke-width="2.5" stroke-dasharray="7 6" vector-effect="non-scaling-stroke"/>');
+
+  var thrMax = document.getElementById('thrMax'), thrMin = document.getElementById('thrMin');
+  if (pmax !== null){
+    parts.push('<line x1="0" x2="700" y1="'+Y(pmax).toFixed(1)+'" y2="'+Y(pmax).toFixed(1)+'" stroke="#8C2318" stroke-width="3" stroke-dasharray="16 8" vector-effect="non-scaling-stroke"/>');
+    thrMax.hidden = false; thrMax.style.top = (Y(pmax) / 300 * 100).toFixed(2) + '%'; thrMax.textContent = 'MAX ' + nf(pmax);
+  } else thrMax.hidden = true;
+  if (pmin !== null){
+    parts.push('<line x1="0" x2="700" y1="'+Y(pmin).toFixed(1)+'" y2="'+Y(pmin).toFixed(1)+'" stroke="#1F5F3F" stroke-width="3" stroke-dasharray="3 7" vector-effect="non-scaling-stroke"/>');
+    thrMin.hidden = false; thrMin.style.top = (Y(pmin) / 300 * 100).toFixed(2) + '%'; thrMin.textContent = 'MIN ' + nf(pmin);
+  } else thrMin.hidden = true;
+
+  var d = s.map(function(p, i){ return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.value).toFixed(1); }).join(' ');
+  parts.push('<path d="'+d+'" fill="none" stroke="#0F4C81" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>');
+
+  var sel = SEL === null ? n - 1 : Math.max(0, Math.min(n - 1, SEL));
+  parts.push('<line x1="'+X(sel).toFixed(1)+'" x2="'+X(sel).toFixed(1)+'" y1="0" y2="300" stroke="#B0451E" stroke-width="3" vector-effect="non-scaling-stroke"/>');
+  document.getElementById('svg').innerHTML = parts.join('');
+
+  var dot = document.getElementById('dot');
+  dot.hidden = false;
+  dot.style.left = (X(sel) / 700 * 100).toFixed(2) + '%';
+  dot.style.top = (Y(s[sel].value) / 300 * 100).toFixed(2) + '%';
+
+  var xa = document.getElementById('xaxis'); xa.innerHTML = '';
+  var idxs = n <= 1 ? [0] : [0, Math.round((n-1)/3), Math.round(2*(n-1)/3), n-1];
+  idxs.forEach(function(i, k){
+    var p = s[i].date.split('-');
+    var txt = RANGE === 'all' ? p[0] : (RANGE === '1a' || RANGE === '3m') ? p[2]+'/'+p[1] : p[2]+'.'+p[1];
+    var el = document.createElement('div');
+    el.textContent = txt;
+    el.style.left = (X(i) / 700 * 100).toFixed(2) + '%';
+    el.style.transform = k === 0 ? 'translateX(0)' : k === idxs.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)';
+    xa.appendChild(el);
+  });
+
+  document.getElementById('roDate').textContent = frDate(s[sel].date);
+  document.getElementById('roValue').textContent = nf(s[sel].value);
+  document.getElementById('oldNote').hidden = !(s[0].date < '2026-08-01');
+
+  var svg = document.getElementById('svg');
+  function pickFrom(e){
+    var r = svg.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width * 700;
+    SEL = Math.round((x - L) / (R - L) * (n - 1));
+    draw();
+  }
+  svg.onpointerdown = function(e){ svg.focus(); pickFrom(e); };
+  svg.onpointermove = function(e){ if (e.buttons || e.pressure > 0) pickFrom(e); };
+  svg.onkeydown = function(e){
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); SEL = Math.max(0, sel - 1); draw(); }
+    if (e.key === 'ArrowRight'){ e.preventDefault(); SEL = Math.min(n - 1, sel + 1); draw(); }
+  };
+}
+function render(){
+  document.getElementById('errBox').hidden = true;
+  document.getElementById('app').hidden = false;
+  document.getElementById('spotValue').textContent = nf(DATA.spot.value);
+  document.getElementById('spotDate').textContent = DATA.spot.date || '—';
+  document.getElementById('spotUpd').textContent = DATA.spot.last_update || 'non communiquée';
+  buildButtons();
+  draw();
+}
+function fail(){
+  document.getElementById('app').hidden = true;
+  document.getElementById('errBox').hidden = false;
+}
+
+fetch(DATA_URL, { cache: 'no-store' })
+  .then(function(r){ if (!r.ok) throw new Error('http ' + r.status); return r.text(); })
+  .then(function(t){ DATA = fromJSON(t); render(); })
+  .catch(fail);
+
+window.addEventListener('resize', function(){ if (DATA) draw(); });
+</script>
+</body>
+</html>

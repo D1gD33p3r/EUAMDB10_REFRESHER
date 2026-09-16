@@ -1,0 +1,51 @@
+name: EUAMDB10 Daily Update
+
+# Déclenchement : cron quotidien + déclenchement manuel pour test.
+# Heure choisie par défaut à 07:30 UTC, arbitrairement après le
+# créneau de mise à jour observé côté Natixis (~07:12 UTC le
+# 16/09/2026). À ajuster si les mises à jour du site se décalent.
+on:
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch: {}
+
+# Nécessaire pour que le GITHUB_TOKEN par défaut puisse pousser un
+# commit — aucun secret ni credential à créer manuellement pour ça.
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Installation des dépendances
+        run: pip install requests
+
+      # Le script écrit ses fichiers dans son répertoire de travail
+      # courant (chemins relatifs "EUAMDB10_*.csv" sans préfixe) —
+      # on le force donc à tourner depuis data/ sans modifier son code.
+      - name: Récupération SPOT + mise à jour HISTO
+        working-directory: data
+        run: python ../scripts/EUAMDB10_DailyBatch_v1.05.py
+
+      # build_frontend_data.py, lui, attend des chemins relatifs à la
+      # racine du repo (data/EUAMDB10_*.csv) — on l'exécute donc depuis
+      # la racine, pas depuis data/.
+      - name: Génération du JSON frontend
+        run: python scripts/build_frontend_data.py
+
+      - name: Commit et push si changement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/EUAMDB10_SPOT.csv data/EUAMDB10_HISTO.csv data/euamdb10.json
+          git diff --cached --quiet || git commit -m "Mise à jour quotidienne EUAMDB10 $(date -u +%Y-%m-%d)"
+          git push

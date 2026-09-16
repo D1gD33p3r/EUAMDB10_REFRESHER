@@ -58,3 +58,14 @@ jobs:
           git add data/EUAMDB10_SPOT.csv data/EUAMDB10_HISTO.csv data/euamdb10.json docs/data/euamdb10.json
           git diff --cached --quiet || git commit -m "Mise à jour quotidienne EUAMDB10 $(date -u +%Y-%m-%d)"
           git push
+
+      # Signal de bonne exécution vers healthchecks.io (dead man's switch).
+      # Cette étape ne s'exécute, par comportement par défaut de GitHub
+      # Actions, que si toutes les étapes précédentes ont réussi — donc
+      # un ping reçu signifie que la récupération SPOT, la génération du
+      # JSON et le commit/push ont tous fonctionné. healthchecks.io est
+      # configuré pour alerter par email si aucun ping n'arrive dans la
+      # fenêtre attendue (grace time 2h après 19:53 UTC) : c'est ce qui
+      # détecte un jour sans mise à jour, silencieusement sinon.
+      - name: Signaler la réussite à healthchecks.io
+        run: curl -fsS -m 10 --retry 5 https://hc-ping.com/474a7649-08c5-4c2d-9620-055b698dc943

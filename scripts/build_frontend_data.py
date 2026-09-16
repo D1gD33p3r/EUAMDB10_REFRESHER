@@ -83,6 +83,12 @@ SPOT_PATH = Path("data/EUAMDB10_SPOT.csv")
 HISTO_PATH = Path("data/EUAMDB10_HISTO.csv")
 PARAMS_PATH = Path("data/EUAMDB10_PARAMS.csv")
 OUTPUT_PATH = Path("data/euamdb10.json")
+# Copie supplémentaire : GitHub Pages sert uniquement le contenu de /docs,
+# pas /data à la racine du repo. Le HTML dans docs/ fait donc
+# fetch('data/euamdb10.json') en relatif, ce qui résout vers ce chemin-ci
+# une fois le site publié. data/euamdb10.json (ci-dessus) reste la source
+# de référence pour l'audit et pour tout futur script qui en aurait besoin.
+DOCS_OUTPUT_PATH = Path("docs/data/euamdb10.json")
 # -------------------------------------------------------------------------
 
 
@@ -154,9 +160,14 @@ def main() -> None:
     with OUTPUT_PATH.open("w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
+    DOCS_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with DOCS_OUTPUT_PATH.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
     print(
         f"OK : {len(payload['history'])} points d'historique, "
-        f"spot={payload['spot']['value']} au {payload['spot']['date']}"
+        f"spot={payload['spot']['value']} au {payload['spot']['date']} "
+        f"— écrit dans {OUTPUT_PATH} et {DOCS_OUTPUT_PATH}"
     )
 
 
